@@ -4,6 +4,7 @@ import Header from './headers/Header'
 import Footer from './headers/Footer'
 import { Routes, Route } from 'react-router-dom'
 import ArticleDetail from './components/ArticleDetail'
+import CategoryPage from './components/CategoryPage'
 
 function App() {
   return (
@@ -26,6 +27,11 @@ function App() {
             <Route
               path="/posts/:slug"
               element={<ArticleDetail />}
+            />
+
+            <Route
+              path="/categorie/:category"
+              element={<CategoryPage />}
             />
           </Routes>
         </div>

@@ -12,6 +12,23 @@ const api = axios.create({
   }
 });
 
+
+
+// Fonction pour rechercher des posts
+export const searchPosts = async (query) => {
+  try {
+    const response = await api.get('/search', {
+      params: {
+        query: query
+      }
+    });
+    console.log(response.data.posts);
+    return response.data.posts;
+  } catch (error) {
+    console.error('Erreur lors de la recherche:', error);
+    throw error;
+  }
+};
 // Intercepteur pour ajouter le token Sanctum à chaque requête
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('sanctum_token');
@@ -38,6 +55,27 @@ export const getPostById = async (id) => {
     return response.data; // retourne les données du post
   } catch (error) {
     console.error('Erreur lors de la récupération du post :', error);
+    throw error;
+  }
+};
+
+
+export const getAllPostsByCategory = async (slug) => {
+  try {
+    const response = await api.get(`/category/${slug}`);
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des posts par catégorie:', error);
+    throw error;
+  }
+};
+
+export const getCategorie = async (categorie) => {
+  try {
+    const response = await api.get(`/categories/${categorie}`);
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des posts par catégorie:', error);
     throw error;
   }
 };
