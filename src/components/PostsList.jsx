@@ -74,33 +74,35 @@ export default function PostsList() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-      {state.posts.length === 0 && !state.loading ? (
-        <div className="col-span-full text-center py-8 text-gray-500">
-          Aucun article disponible
-        </div>
-      ) : (
-        state.posts.map((post, index) => (
-          <PostCard 
-            key={`${post.id}-${index}`}
-            post={post} 
-            isLast={index === state.posts.length - 1}
-            innerRef={index === state.posts.length - 1 ? ref : null}
-          />
-        ))
-      )}
+    <div className=' container mx-auto py-8' >
+      <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+        {state.posts.length === 0 && !state.loading ? (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            Aucun article disponible
+          </div>
+        ) : (
+          state.posts.map((post, index) => (
+            <PostCard 
+              key={`${post.id}-${index}`}
+              post={post} 
+              isLast={index === state.posts.length - 1}
+              innerRef={index === state.posts.length - 1 ? ref : null}
+            />
+          ))
+        )}
 
-      {state.loading && (
-        <div className="col-span-full flex justify-center my-8">
-          <span className="loading loading-spinner loading-lg text-primary"></span>
-        </div>
-      )}
+        {state.loading && (
+          <div className="col-span-full flex justify-center my-8">
+            <span className="loading loading-spinner loading-lg text-primary"></span>
+          </div>
+        )}
 
-      {!state.hasMore && state.posts.length > 0 && (
-        <div className="col-span-full text-center py-8 text-gray-500">
-          Vous avez atteint la fin des articles
-        </div>
-      )}
+        {!state.hasMore && state.posts.length > 0 && (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            Vous avez atteint la fin des articles
+          </div>
+        )}
+      </div>
     </div>
   )
 }

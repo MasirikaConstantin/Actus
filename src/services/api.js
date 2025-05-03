@@ -14,6 +14,19 @@ const api = axios.create({
 
 
 
+// Fonction pour récupérer les posts du carousel
+export const getCarouselPosts = async () => {
+  try {
+    const response = await api.get('/caroussel');
+    return response.data.data;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des posts du carousel:', error);
+    throw error;
+  }
+};
+
+// ... reste de vos fonctions existantes ...
+
 // Fonction pour rechercher des posts
 export const searchPosts = async (query) => {
   try {

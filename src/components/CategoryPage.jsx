@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { getAllPostsByCategory,getCategorie } from '../services/api';
+import { useInsertionEffect } from 'react';
 
 const CategoryPage = () => {
+
   const { category } = useParams();
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
@@ -10,7 +12,12 @@ const CategoryPage = () => {
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-
+  function useDocumentTitle(title) {
+    useInsertionEffect(() => {
+      document.title = title;
+    }, [title]);
+  }
+  
   // Chargement des posts d'une catégorie avec votre API
   // Chargement des posts et de la catégorie en une seule opération
 useEffect(() => {
@@ -38,6 +45,8 @@ useEffect(() => {
   
     fetchData();
   }, [category]);
+  useDocumentTitle(cat.name);
+
   // Filtrage local des posts
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -53,6 +62,7 @@ useEffect(() => {
   }, [searchQuery, posts]);
 
   return (
+    
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
@@ -148,6 +158,6 @@ useEffect(() => {
       )}
     </div>
   );
-};
 
+};
 export default CategoryPage;
