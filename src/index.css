@@ -1,5 +1,11 @@
+@font-face {
+  font-family: 'MaPolice';
+  src: url('/fonts/ProductSans-Light.ttf') format('truetype');
+}
+
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'MaPolice', sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -23,6 +29,8 @@ a:hover {
 }
 
 body {
+  font-family: 'MaPolice', sans-serif !important;
+
   margin: 0;
   display: flex;
   place-items: center;

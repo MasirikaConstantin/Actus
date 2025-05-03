@@ -27,6 +27,7 @@ const Header = () => {
               <li><Link to="/">Accueil</Link></li>
               <li><Link to="/actualites">Actualités</Link></li>
               <li><Link to="/categories">Catégories</Link></li>
+              <li><Link to="/tous">Tout les Posts</Link></li>
               <li><Link to="/abonnements">Abonnements</Link></li>
             </ul>
           </div>
@@ -43,7 +44,8 @@ const Header = () => {
             <li><Link to="/" className="hover:text-primary">Accueil</Link></li>
             <li><Link to="/actualites" className="hover:text-primary">Actualités</Link></li>
             <li><Link to="/categories" className="hover:text-primary">Catégories</Link></li>
-            <li><Link to="/abonnements" className="hover:text-primary">Abonnements Premium</Link></li>
+            <li><Link to="/tous" className="hover:text-primary">Tous</Link></li>
+            {/*<li><Link to="/abonnements" className="hover:text-primary">Abonnements Premium</Link></li>*/}
           </ul>
         </div>
 

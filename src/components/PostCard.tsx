@@ -68,6 +68,7 @@ const PostCard = React.forwardRef<HTMLDivElement, PostCardProps>(
             <span>{formattedDate}</span>
             <span>{post.temps} min de lecture</span>
           </div>
+          
 
           <div className="card-actions justify-between items-center">
             <div className="flex gap-4">

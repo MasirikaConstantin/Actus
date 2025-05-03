@@ -36,8 +36,14 @@
   --depth: 1;
   --noise: 0;
 }
+@font-face {
+  font-family: 'MaPolice';
+  src: url('/fonts/ProductSans-Light.ttf') format('truetype');
+}
 
 #root {
+  font-family: 'MaPolice', sans-serif;
+
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;

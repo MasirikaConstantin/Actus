@@ -86,7 +86,6 @@ export default function PostsList() {
             post={post} 
             isLast={index === state.posts.length - 1}
             innerRef={index === state.posts.length - 1 ? ref : null}
-            onPostClick={(slug) => window.location.href = `/posts/${slug}`}
           />
         ))
       )}

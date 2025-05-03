@@ -32,6 +32,32 @@ export const getPosts = async (page = 1) => {
   }
 };
 
+export const getPostById = async (id) => {
+  try {
+    const response = await api.get(`/posts/${id}`);
+    return response.data; // retourne les données du post
+  } catch (error) {
+    console.error('Erreur lors de la récupération du post :', error);
+    throw error;
+  }
+};
+
+export const getPostsByCategory = async (id) => {
+  try {
+    const response = await api.get(`/posts/${id}`);
+    return response.data; // retourne les données du post
+  } catch (error) {
+    console.error('Erreur lors de la récupération du post :', error);
+    throw error;
+  }
+};
+
+export const getPostBySlug = async (slug) => {
+  const response = await api.get(`/posts/slug/${slug}`);
+  return response.data;
+};
+
+
 // Reste du code inchangé...
 export const login = async (credentials) => {
   try {
