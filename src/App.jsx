@@ -7,6 +7,7 @@ import ArticleDetail from './components/ArticleDetail'
 import CategoryPage from './components/CategoryPage'
 import { useEffect, useInsertionEffect } from 'react'
 import HeroCarousel from './components/HeroCarousel'
+import ProfileEditor from './components/ProfileEditor'
 
 function App() {
   
@@ -44,6 +45,10 @@ function App() {
             <Route
               path="/categorie/:category"
               element={<CategoryPage />}
+            />
+            <Route
+              path="/profile"
+              element={<ProfileEditor />}
             />
           </Routes>
         </div>

@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { searchPosts} from '../services/api';
-import {login, register, logout } from '../services/api-token';
+import { useNavigate } from 'react-router-dom';
+
+import {login, register, logout } from '../services/apitoken';
 const Header = () => {
+  const navigate = useNavigate();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
@@ -23,7 +27,16 @@ const Header = () => {
   const [errors, setErrors] = useState({});
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-
+  useEffect(() => {
+    // Vérifier l'authentification au chargement
+    const token = localStorage.getItem('sanctum_token');
+    const userData = localStorage.getItem('user');
+    //console.log(userData);
+    if (token && userData) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userData));
+    }
+  }, []);
   // Animation du header au scroll
   useEffect(() => {
     const handleScroll = () => {
@@ -43,7 +56,9 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
-
+  const handleClick = () => {
+    navigate(`/profile`);
+  };
   // Effet visuel de halo autour du logo
   useEffect(() => {
     const logo = headerRef.current?.querySelector('.logo');
@@ -127,15 +142,7 @@ const Header = () => {
   }, [searchModalOpen]);
 
 
-  useEffect(() => {
-    // Vérifier l'authentification au chargement
-    const token = localStorage.getItem('sanctum_token');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
-    }
-  }, []);
+  
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -454,8 +461,8 @@ const Header = () => {
           {isAuthenticated ? (
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt="Profile" className="w-10 rounded-full" />
+                  {user?.image ? (
+                    <img src={user.image} alt="Profile" className="w-10 rounded-full" />
                   ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -463,7 +470,8 @@ const Header = () => {
                   )}
                 </label>
                 <ul tabIndex={0} className="mt-3 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
-                  <li><a>Profil</a></li>
+                  <li         onClick={handleClick}
+                  ><a>Profil</a></li>
                   <li><a>Paramètres</a></li>
                   <li><button onClick={handleLogout}>Déconnexion</button></li>
                 </ul>
