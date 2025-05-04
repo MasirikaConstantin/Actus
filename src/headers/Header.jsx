@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { searchPosts } from '../services/api';
-
+import { searchPosts} from '../services/api';
+import {login, register, logout } from '../services/api-token';
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -12,6 +12,17 @@ const Header = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const headerRef = useRef(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+
+  const [activeTab, setActiveTab] = useState('login');
+  const [formData, setFormData] = useState({
+    login: { email: '', password: '', remember: false },
+    register: { name: '', email: '', password: '', passwordConfirmation: '' }
+  });
+  const [errors, setErrors] = useState({});
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
 
   // Animation du header au scroll
   useEffect(() => {
@@ -114,6 +125,105 @@ const Header = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [searchModalOpen]);
+
+
+  useEffect(() => {
+    // Vérifier l'authentification au chargement
+    const token = localStorage.getItem('sanctum_token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setErrors({});
+    
+    try {
+      const { email, password } = formData.login;
+      const response = await login({ email, password });
+      
+      // Mise à jour de l'état après connexion réussie
+      setIsAuthenticated(true);
+      setUser(response.user || { email });
+      setLoginModalOpen(false);
+      
+      // Réinitialisation du formulaire
+      setFormData(prev => ({
+        ...prev,
+        login: { ...prev.login, password: '' }
+      }));
+    } catch (error) {
+      console.error('Erreur de connexion:', error);
+      
+      // Formatage des erreurs pour l'affichage
+      if (typeof error === 'object' && !Array.isArray(error)) {
+        setErrors({ login: error });
+      } else {
+        setErrors({ login: { message: 'Email ou mot de passe incorrect' } });
+      }
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setIsRegistering(true);
+    setErrors({});
+    
+    try {
+      const response = await register(formData.register);
+      
+      setIsAuthenticated(true);
+      setUser(response.user || { email: formData.register.email });
+      setLoginModalOpen(false);
+      
+      // Réinitialisation du formulaire
+      setFormData(prev => ({
+        ...prev,
+        register: {
+          name: '',
+          email: '',
+          password: '',
+          passwordConfirmation: ''
+        }
+      }));
+    } catch (error) {
+      console.error('Erreur d\'inscription:', error);
+      
+      if (typeof error === 'object') {
+        setErrors({ register: error });
+      } else {
+        setErrors({ register: { message: 'Une erreur est survenue lors de l\'inscription' } });
+      }
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsAuthenticated(false);
+      setUser(null);
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
+
+  const handleInputChange = (formType, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [formType]: {
+        ...prev[formType],
+        [field]: value
+      }
+    }));
+  };
 
   return (
     <>
@@ -341,23 +451,42 @@ const Header = () => {
           </button>
 
           {/* Bouton Connexion avec animation */}
-          <button 
-            onClick={() => setLoginModalOpen(true)} 
-            className="btn btn-primary btn-sm sm:btn-md hover:bg-primary-focus transition-all duration-200 relative overflow-hidden group"
-          >
-            <span className="hidden sm:inline relative z-10">Connexion</span>
-            <span className="sm:hidden relative z-10">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </span>
-            <span 
-              className="absolute inset-0 bg-primary-focus opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{
-                background: 'linear-gradient(90deg, hsl(var(--pf)) 0%, hsl(var(--p)) 100%)'
-              }}
-            />
-          </button>
+          {isAuthenticated ? (
+              <div className="dropdown dropdown-end">
+                <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Profile" className="w-10 rounded-full" />
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  )}
+                </label>
+                <ul tabIndex={0} className="mt-3 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
+                  <li><a>Profil</a></li>
+                  <li><a>Paramètres</a></li>
+                  <li><button onClick={handleLogout}>Déconnexion</button></li>
+                </ul>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setLoginModalOpen(true)} 
+                className="btn btn-primary btn-sm sm:btn-md hover:bg-primary-focus transition-all duration-200 relative overflow-hidden group"
+              >
+                <span className="hidden sm:inline relative z-10">Connexion</span>
+                <span className="sm:hidden relative z-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </span>
+                <span 
+                  className="absolute inset-0 bg-primary-focus opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{
+                    background: 'linear-gradient(90deg, hsl(var(--pf)) 0%, hsl(var(--p)) 100%)'
+                  }}
+                />
+              </button>
+            )}
         </div>
       </header>
 
@@ -466,73 +595,272 @@ const Header = () => {
       )}
 
       {/* Modal de Connexion */}
-      <dialog open={loginModalOpen} className="modal modal-bottom sm:modal-middle">
+       {/* Modal de Connexion/Inscription */}
+       <dialog open={loginModalOpen} className="modal modal-bottom sm:modal-middle">
         <div className="modal-box">
           <button 
-            onClick={() => setLoginModalOpen(false)} 
+            onClick={() => {
+              setLoginModalOpen(false);
+              setErrors({});
+            }} 
             className="btn btn-sm btn-circle absolute right-2 top-2 hover:bg-error/20 hover:text-error"
           >
             ✕
           </button>
-          <h3 className="font-bold text-lg">Connexion à votre compte</h3>
+          <h3 className="font-bold text-lg">
+            {activeTab === 'login' ? 'Connexion' : activeTab === 'register' ? 'Inscription' : 'Mot de passe oublié'}
+          </h3>
           
           <div className="tabs tabs-boxed my-4">
-            <a className="tab tab-active">Connexion</a> 
-            <a className="tab">Inscription</a>
-            <a className="tab">Mot de passe oublié</a>
-          </div>
-
-          <div className="space-y-4">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Email</span>
-              </label>
-              <input 
-                type="email" 
-                placeholder="votre@email.com" 
-                className="input input-bordered focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200" 
-              />
-            </div>
-            
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Mot de passe</span>
-              </label>
-              <input 
-                type="password" 
-                placeholder="••••••••" 
-                className="input input-bordered focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200" 
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <label className="label cursor-pointer gap-2">
-                <input type="checkbox" className="checkbox checkbox-primary" />
-                <span className="label-text">Se souvenir de moi</span> 
-              </label>
-              
-              <a href="#" className="text-sm link link-hover">Aide?</a>
-            </div>
-          </div>
-
-          <div className="modal-action">
             <button 
-              type="button" 
-              onClick={() => setLoginModalOpen(false)} 
-              className="btn btn-ghost hover:bg-base-200 transition-all duration-200"
+              className={`tab ${activeTab === 'login' ? 'tab-active' : ''}`}
+              onClick={() => setActiveTab('login')}
             >
-              Annuler
+              Connexion
+            </button> 
+            <button 
+              className={`tab ${activeTab === 'register' ? 'tab-active' : ''}`}
+              onClick={() => setActiveTab('register')}
+            >
+              Inscription
             </button>
-            <button className="btn btn-primary hover:bg-primary-focus transition-all duration-200">
-              Se connecter
+            <button 
+              className={`tab ${activeTab === 'forgot' ? 'tab-active' : ''}`}
+              onClick={() => setActiveTab('forgot')}
+            >
+              Mot de passe oublié
             </button>
           </div>
+
+          {activeTab === 'login' && (
+            <form onSubmit={handleLogin}>
+              <div className="space-y-4">
+                {/* Affichage des erreurs générales */}
+                {errors.login?.message && (
+                  <div className="alert alert-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{errors.login.message}</span>
+                  </div>
+                )}
+
+                {/* Champ email */}
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Email</span>
+                  </label>
+                  <input 
+                    type="email" 
+                    placeholder="votre@email.com" 
+                    className={`input input-bordered ${errors.login?.email ? 'input-error' : ''}`}
+                    value={formData.login.email}
+                    onChange={(e) => handleInputChange('login', 'email', e.target.value)}
+                    required
+                  />
+                  {errors.login?.email && (
+                    <label className="label">
+                      <span className="label-text-alt text-error">{errors.login.email[0]}</span>
+                    </label>
+                  )}
+                </div>
+                
+                {/* Champ mot de passe */}
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Mot de passe</span>
+                  </label>
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    className={`input input-bordered ${errors.login?.password ? 'input-error' : ''}`}
+                    value={formData.login.password}
+                    onChange={(e) => handleInputChange('login', 'password', e.target.value)}
+                    required
+                  />
+                  {errors.login?.password && (
+                    <label className="label">
+                      <span className="label-text-alt text-error">{errors.login.password[0]}</span>
+                    </label>
+                  )}
+                </div>
+
+                {/* Boutons */}
+                <div className="modal-action">
+                  <button 
+                    type="button" 
+                    onClick={() => setLoginModalOpen(false)} 
+                    className="btn btn-ghost hover:bg-base-200 transition-all duration-200"
+                    disabled={isLoggingIn}
+                  >
+                    Annuler
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary hover:bg-primary-focus transition-all duration-200"
+                    disabled={isLoggingIn}
+                  >
+                    {isLoggingIn ? (
+                      <>
+                        <span className="loading loading-spinner"></span>
+                        Connexion...
+                      </>
+                    ) : 'Se connecter'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+           {activeTab === 'register' && (
+            <form onSubmit={handleRegister}>
+              <div className="space-y-4">
+                {/* Affichage des erreurs générales */}
+                {errors.register?.message && (
+                  <div className="alert alert-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{errors.register.message}</span>
+                  </div>
+                )}
+
+                {/* Champ nom */}
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Nom complet</span>
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="John Doe" 
+                    className={`input input-bordered ${errors.register?.name ? 'input-error' : ''}`}
+                    value={formData.register.name}
+                    onChange={(e) => handleInputChange('register', 'name', e.target.value)}
+                    required
+                  />
+                  {errors.register?.name && (
+                    <label className="label">
+                      <span className="label-text-alt text-error">{errors.register.name[0]}</span>
+                    </label>
+                  )}
+                </div>
+                
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Email</span>
+                  </label>
+                  <input 
+                    type="email" 
+                    placeholder="votre@email.com" 
+                    className={`input input-bordered ${errors.register?.email ? 'input-error' : ''}`}
+                    value={formData.register.email}
+                    onChange={(e) => handleInputChange('register', 'email', e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Mot de passe</span>
+                  </label>
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    className={`input input-bordered ${errors.register?.password ? 'input-error' : ''}`}
+                    value={formData.register.password}
+                    onChange={(e) => handleInputChange('register', 'password', e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Confirmation du mot de passe</span>
+                  </label>
+                  <input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    className={`input input-bordered ${errors.register?.password_confirmation ? 'input-error' : ''}`}
+                    value={formData.register.passwordConfirmation}
+                    onChange={(e) => handleInputChange('register', 'passwordConfirmation', e.target.value)}
+                    required
+                  />
+                </div>
+
+                <label className="label cursor-pointer gap-2 justify-start">
+                  <input 
+                    type="checkbox" 
+                    className="checkbox checkbox-primary" 
+                    checked={true}
+                    readOnly
+                  />
+                  <span className="label-text">
+                    J'accepte les <a href="#" className="link link-primary">conditions d'utilisation</a>
+                  </span> 
+                </label>
+              </div>
+
+               {/* Boutons */}
+               <div className="modal-action">
+                  <button 
+                    type="button" 
+                    onClick={() => setLoginModalOpen(false)} 
+                    className="btn btn-ghost hover:bg-base-200 transition-all duration-200"
+                    disabled={isRegistering}
+                  >
+                    Annuler
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary hover:bg-primary-focus transition-all duration-200"
+                    disabled={isRegistering}
+                  >
+                    {isRegistering ? (
+                      <>
+                        <span className="loading loading-spinner"></span>
+                        Inscription...
+                      </>
+                    ) : 'S\'inscrire'}
+                  </button>
+                </div>
+            </form>
+          )}
+
+          {activeTab === 'forgot' && (
+            <div>
+              <div className="form-control">
+                <label className="label">
+                  <span className="label-text">Email</span>
+                </label>
+                <input 
+                  type="email" 
+                  placeholder="votre@email.com" 
+                  className="input input-bordered" 
+                />
+              </div>
+              <div className="modal-action">
+                <button 
+                  type="button" 
+                  onClick={() => setLoginModalOpen(false)} 
+                  className="btn btn-ghost hover:bg-base-200 transition-all duration-200"
+                >
+                  Annuler
+                </button>
+                <button className="btn btn-primary hover:bg-primary-focus transition-all duration-200">
+                  Envoyer le lien
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         
         <form method="dialog" className="modal-backdrop">
-          <button onClick={() => setLoginModalOpen(false)}>close</button>
+          <button onClick={() => {
+            setLoginModalOpen(false);
+            setErrors({});
+          }}>close</button>
         </form>
       </dialog>
+    
     </>
   );
 };

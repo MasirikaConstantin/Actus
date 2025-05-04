@@ -220,18 +220,20 @@ const ArticleDetail = () => {
                     className="rounded-xl shadow-md"
                     loading="lazy"
                   />
-                  {section.image_legend && (
+                  {section.image && (
                     <figcaption className="text-sm text-center mt-2 opacity-75">
-                      {section.image_legend}
+                      {section.titre}
                     </figcaption>
                   )}
                 </figure>
               )}
               <div className="prose max-w-none">
-                {section.contenu?.split('\n').map((paragraph, i) => (
-                  <p key={i} className="mb-5 text-lg leading-relaxed">{paragraph}</p>
-                ))}
-              </div>
+                  <div
+                    className="text-lg leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: section.contenu }}
+                  />
+                </div>
+
             </section>
           ))}
         </div>

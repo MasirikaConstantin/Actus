@@ -25,7 +25,6 @@ export const getCarouselPosts = async () => {
   }
 };
 
-// ... reste de vos fonctions existantes ...
 
 // Fonction pour rechercher des posts
 export const searchPosts = async (query) => {
@@ -109,37 +108,47 @@ export const getPostBySlug = async (slug) => {
 };
 
 
-// Reste du code inchangé...
-export const login = async (credentials) => {
-  try {
-    // Si votre API utilise le CSRF
-    await api.get('/sanctum/csrf-cookie');
-    
-    const response = await api.post('/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('sanctum_token', response.data.token);
-    }
-    return response.data;
-  } catch (error) {
-    console.error('Erreur lors de la connexion:', error);
-    throw error;
-  }
-};
+
 
 export const checkAuth = () => {
   const token = localStorage.getItem('sanctum_token');
   return !!token;
 };
 
-export const logout = async () => {
+
+
+export const login = async (credentials) => {
   try {
-    await api.post('/logout');
-    localStorage.removeItem('sanctum_token');
+    // Récupération du cookie CSRF
+    await api.get('/sanctum/csrf-cookie');
+    
+    const response = await api.post('/login', credentials);
+    
+    if (response.data.token) {
+      localStorage.setItem('sanctum_token', response.data.token);
+      if (response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      return response.data;
+    }
+    
+    throw new Error('Réponse inattendue du serveur');
   } catch (error) {
-    console.error('Erreur lors de la déconnexion:', error);
-    // Supprimer le token même en cas d'erreur
-    localStorage.removeItem('sanctum_token');
-    throw error;
+    console.error('Erreur lors de la connexion:', error);
+    
+    // Gestion des erreurs spécifiques
+    if (error.response) {
+      // Erreurs de validation (422)
+      if (error.response.status === 422) {
+        throw error.response.data.errors;
+      }
+      // Erreur d'authentification (401)
+      if (error.response.status === 401) {
+        throw { message: 'Email ou mot de passe incorrect' };
+      }
+    }
+    
+    throw { message: 'Une erreur est survenue lors de la connexion' };
   }
 };
 
